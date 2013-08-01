@@ -4,6 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -20,34 +21,62 @@ public class MVmapJUnitTest {
 	@Rule
 	public ExpectedException exception = ExpectedException.none();
 
-	private MVMap<String, Integer> create() {
+	private MVMap<String, Integer> createEmpty() {
 		return new MVHashMap<String, Integer>();
 	}
 
-//	@Test
-//	public void testCreateList() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testBucketHashMap() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testHashCode() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testAbstractBucketMap() {
-//		fail("Not yet implemented");
-//	}
+	private MVMap<String, Integer> create() {
+		MVMap<String, Integer> map = createEmpty();
+		map.put("A", 10);
+		map.put("A", 11);
+		map.put("A", 12);
+		map.put("A", 13);
+		map.put("A", 14);
+		map.put("A", 15);
+		map.put("B", 19);
+		map.put("C", 190);
+		map.put("AA", 119);
+		map.put("B", 159);
+		map.put("B", 1119);
+
+		return map;
+	}
+
+	@Test
+	public void testConsistency() {
+		MVMap<String, Integer> map = create();
+
+		List<Integer> l = map.get("C");
+
+		l.remove(0);
+
+		assertTrue(l.size() == 0);
+
+	}
+
+	@Test
+	public void testConcurrentModification() {
+
+		MVMap<String, Integer> map = create();
+
+		List<Integer> l1 = map.get("A");
+		assertTrue(l1.size() == 6);
+
+		List<Integer> subL1 = l1.subList(0, 4);
+
+		subL1.clear();
+
+		map.put("A", 123);
+
+		exception.expect(ConcurrentModificationException.class);
+		subL1.isEmpty();
+
+	}
 
 	@Test
 	public void testSize() {
 
-		MVMap<String, Integer> map = create();
+		MVMap<String, Integer> map = createEmpty();
 		assertTrue(map.isEmpty());
 
 		map.put("A", 10);
@@ -81,7 +110,7 @@ public class MVmapJUnitTest {
 	@Test
 	public void testSubListSize() {
 
-		MVMap<String, Integer> map = create();
+		MVMap<String, Integer> map = createEmpty();
 		assertTrue(map.isEmpty());
 
 		map.put("A", 100);
@@ -119,7 +148,7 @@ public class MVmapJUnitTest {
 	@Test
 	public void testIsEmpty() {
 
-		MVMap<String, Integer> map = create();
+		MVMap<String, Integer> map = createEmpty();
 
 		assertTrue(map.isEmpty());
 
@@ -139,7 +168,7 @@ public class MVmapJUnitTest {
 	@Test
 	public void testContainsKey() {
 
-		MVMap<String, Integer> map = create();
+		MVMap<String, Integer> map = createEmpty();
 
 		map.put("A", 100);
 		map.put("B", 1900);
@@ -158,7 +187,7 @@ public class MVmapJUnitTest {
 
 	@Test
 	public void testContainsValue() {
-		MVMap<String, Integer> map = create();
+		MVMap<String, Integer> map = createEmpty();
 		assertTrue(map.isEmpty());
 
 		map.put("A", 100);
@@ -175,61 +204,9 @@ public class MVmapJUnitTest {
 		assertFalse(map.containsValue(11000));
 	}
 
-//	@Test
-//	public void testGet() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testPutKV() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testPutEntryOfKV() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testRemoveKV() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testRemoveEntryOfKV() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testClear() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testValues() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testToString() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testEqualsObject() {
-//		fail("Not yet implemented");
-//	}
-//
-//
-//	@Test
-//	public void testToArray() {
-//		fail("Not yet implemented");
-//	}
-//
-
 	@Test
 	public void testMapIterator() {
-		MVMap<String, Integer> map = create();
+		MVMap<String, Integer> map = createEmpty();
 
 		map.put("A", 1);
 		map.put("B", 2);
@@ -290,7 +267,7 @@ public class MVmapJUnitTest {
 
 	@Test
 	public void testMapIteratorException1() {
-		MVMap<String, Integer> map = create();
+		MVMap<String, Integer> map = createEmpty();
 
 		map.put("A", 1);
 		map.put("B", 2);
@@ -315,7 +292,7 @@ public class MVmapJUnitTest {
 
 	@Test
 	public void testMapIteratorException2() {
-		MVMap<String, Integer> map = create();
+		MVMap<String, Integer> map = createEmpty();
 
 		map.put("A", 1);
 		map.put("B", 2);
@@ -335,8 +312,54 @@ public class MVmapJUnitTest {
 	}
 
 	@Test
+	public void testListIteratorException1() {
+		MVMap<String, Integer> map = createEmpty();
+
+		map.put("A", 1);
+		map.put("B", 2);
+		map.put("C", 3);
+		map.put("D", 4);
+		map.put("B", 5);
+		map.put("A", 6);
+		map.put("A", 7);
+		List<Integer> list = map.get("A");
+
+		Iterator<Integer> it = list.iterator();
+		it.next();
+		it.remove();
+
+		exception.expect(IllegalStateException.class);
+		it.remove();
+
+	}
+
+	@Test
+	public void testListIteratorException2() {
+		MVMap<String, Integer> map = createEmpty();
+
+		map.put("A", 1);
+		map.put("B", 2);
+		map.put("C", 3);
+		map.put("D", 4);
+		map.put("B", 5);
+		map.put("A", 6);
+		map.put("A", 7);
+		List<Integer> list = map.get("A");
+
+		Iterator<Integer> it = list.iterator();
+		it.next();
+		it.next();
+		it.next();
+
+		// A double consecutive remove() is not allowed
+		exception.expect(NoSuchElementException.class);
+		it.next();
+	}
+
+	@Test
 	public void testListIterator() {
-		MVMap<String, Integer> map = create();
+
+		MVMap<String, Integer> map = createEmpty();
 
 		map.put("A", 1);
 		map.put("B", 2);
@@ -380,55 +403,9 @@ public class MVmapJUnitTest {
 			it.next();
 		}
 		assertFalse(it.hasNext());
-
-	}
-
-	@Test
-	public void testListIteratorException1() {
-		MVMap<String, Integer> map = create();
-
-		map.put("A", 1);
-		map.put("B", 2);
-		map.put("C", 3);
-		map.put("D", 4);
-		map.put("B", 5);
-		map.put("A", 6);
-		map.put("A", 7);
-		List<Integer> list = map.get("A");
-
-		Iterator<Integer> it = list.iterator();
-		it.next();
-		it.remove();
-
-		exception.expect(IllegalStateException.class);
-		it.remove();
-
-	}
-
-	@Test
-	public void testListIteratorException2() {
-		MVMap<String, Integer> map = create();
-
-		map.put("A", 1);
-		map.put("B", 2);
-		map.put("C", 3);
-		map.put("D", 4);
-		map.put("B", 5);
-		map.put("A", 6);
-		map.put("A", 7);
-		List<Integer> list = map.get("A");
-
-		Iterator<Integer> it = list.iterator();
-		it.next();
-		it.next();
-		it.next();
-
-		// A double consecutive remove() is not allowed
-		exception.expect(NoSuchElementException.class);
-		it.next();
 	}
 
 	private void print(String s) {
-//		System.out.println(s);
+		System.out.println(s);
 	}
 }
