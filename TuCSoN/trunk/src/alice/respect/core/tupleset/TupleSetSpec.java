@@ -21,56 +21,48 @@ import java.util.LinkedList;
 
 import alice.logictuple.LogicTuple;
 import alice.logictuple.TupleArgument;
+import alice.logictuple.exceptions.InvalidLogicTupleException;
 import alice.logictuple.exceptions.InvalidTupleOperationException;
-import alice.respect.core.collection.MVHashMap;
+import alice.respect.core.collection.DoubleKeyMVMap;
 
 /**
  * Class representing a Tuple Set.
  */
 public class TupleSetSpec extends AbstractTupleSet {
 
-	// TODO ha senso avere due reaction perfettamente uguali nella lista?
-	// due normali tuple devono rimanere distinte anche se sono identiche, ma
-	// per le reaction potrebbe essere un problema.
-
 	public TupleSetSpec() {
-		tuples = new MVHashMap<String, LogicTuple>();
-		tAdded = new LinkedList<LogicTupleEntry>();
-		tRemoved = new LinkedList<LogicTupleEntry>();
+		tuples = new DoubleKeyMVMap<String, String, LogicTuple>();
+		tAdded = new LinkedList<LTEntry>();
+		tRemoved = new LinkedList<LTEntry>();
 		transaction = false;
 	}
 
 	@Override
-	protected String getKey(LogicTuple t) {
-		log("");
-		log("La tupla è " + t.toString());
+	protected String getTupleKey1(LogicTuple t) throws alice.logictuple.exceptions.InvalidLogicTupleException {
 		try {
-			if (!t.getName().equals("reaction")) {
-				System.err.println("Messaggio Saverio: TupleSpech ha un problema");
-				// TODO valutare se è il caso di effettuare questo controllo
-				// throw new Exception();
-			}
 			TupleArgument event = t.getArg(0);
-			String key = event.getName();
-			key += "-" + event.getArg(0).getPredicateIndicator();
-
-			log("La chiave è:" + key);
-
-			return key;
-
+			String s = event.getPredicateIndicator();
+			return s;
 		} catch (InvalidTupleOperationException e) {
-			e.printStackTrace();
+			throw new alice.logictuple.exceptions.InvalidLogicTupleException();
 		}
-		/*
-		 * reaction( out(boot),
-		 * true,','(out(agent_list([])),','(out(tc_list([])),in(boot))) ).
-		 */
-
-		return "";
 	}
 
-	private void log(Object o) {
-		System.out.println(o.toString());
+	@Override
+	protected String getTupleKey2(LogicTuple t) throws InvalidLogicTupleException {
+		try {
+			TupleArgument eventArg = t.getArg(0).getArg(0);
+
+			if (eventArg.isNumber())
+				return eventArg.toString();
+			else if (eventArg.isVar())
+				return "VAR";
+			else
+				return eventArg.getPredicateIndicator();
+
+		} catch (InvalidTupleOperationException e) {
+			throw new alice.logictuple.exceptions.InvalidLogicTupleException();
+		}
 	}
 
 }
