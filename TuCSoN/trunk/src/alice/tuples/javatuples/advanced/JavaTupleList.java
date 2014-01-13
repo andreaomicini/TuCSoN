@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import alice.tuplecentre.api.Tuple;
+import alice.tuples.javatuples.basic.NonCompositeException;
 
 /**
  * @author ste (mailto: s.mariani@unibo.it) on 09/gen/2014

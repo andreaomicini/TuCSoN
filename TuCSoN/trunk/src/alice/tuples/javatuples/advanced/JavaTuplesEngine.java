@@ -5,10 +5,10 @@ package alice.tuples.javatuples.advanced;
 
 import alice.logictuple.LogicTuple;
 import alice.logictuple.TupleArgument;
-import alice.logictuple.exceptions.InvalidTupleOperationException;
 import alice.tuplecentre.api.exceptions.InvalidOperationException;
 import alice.tuplecentre.api.exceptions.InvalidTupleException;
 import alice.tuplecentre.api.exceptions.InvalidVarNameException;
+import alice.tuples.javatuples.basic.NonCompositeException;
 
 /**
  * @author ste (mailto: s.mariani@unibo.it) on 09/gen/2014
@@ -16,23 +16,13 @@ import alice.tuplecentre.api.exceptions.InvalidVarNameException;
  */
 public class JavaTuplesEngine {
 
-    public static LogicTuple toLogicTuple(final IJavaTuple t) {
-        try {
-            return LogicTuple.parse(t.toString());
-        } catch (InvalidTupleException e) {
-            // cannot happen
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     public static IJavaTuple toJavaTuple(final LogicTuple t) {
         String name = null;
         int nArgs;
         try {
             name = t.getName();
             nArgs = t.getArity();
-        } catch (InvalidOperationException e) {
+        } catch (final InvalidOperationException e) {
             nArgs = 0;
         }
         if (nArgs == 0) {
@@ -40,22 +30,33 @@ public class JavaTuplesEngine {
             return new JavaTupleValue(name);
         }
         try {
-            IJavaTuple tuple = new JavaTuple(name, toJavaTuple(t.getArg(0)));
+            final IJavaTuple tuple =
+                    new JavaTuple(name, JavaTuplesEngine.toJavaTuple(t
+                            .getArg(0)));
             for (int i = 1; i < nArgs; i++) {
-                tuple.addArg(toJavaTuple(t.getArg(i)));
+                tuple.addArg(JavaTuplesEngine.toJavaTuple(t.getArg(i)));
             }
             return tuple;
-        } catch (InvalidTupleException e) {
+        } catch (final InvalidTupleException e) {
             // cannot happen
-        } catch (InvalidOperationException e) {
+        } catch (final InvalidOperationException e) {
             // cannot happen
-        } catch (NonCompositeException e) {
+        } catch (final NonCompositeException e) {
             // cannot happen
         }
         return null;
     }
 
-    // TODO
+    public static LogicTuple toLogicTuple(final IJavaTuple t) {
+        try {
+            return LogicTuple.parse(t.toString());
+        } catch (final InvalidTupleException e) {
+            // cannot happen
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     /**
      * @param arg
      * @return
@@ -64,11 +65,12 @@ public class JavaTuplesEngine {
         if (arg.isAtomic() || arg.isVar()) {
             if (arg.isVar()) {
                 try {
+                    // TODO what about bound vars?
                     return new JavaTupleVar(arg.getName());
-                } catch (InvalidVarNameException e) {
+                } catch (final InvalidVarNameException e) {
                     // cannot happen
                     return null;
-                } catch (InvalidOperationException e) {
+                } catch (final InvalidOperationException e) {
                     // cannot happen
                     return null;
                 }
@@ -86,7 +88,7 @@ public class JavaTuplesEngine {
                 } else {
                     return new JavaTupleValue(arg.getName());
                 }
-            } catch (InvalidOperationException e) {
+            } catch (final InvalidOperationException e) {
                 // cannot happen
             }
         }
@@ -95,32 +97,34 @@ public class JavaTuplesEngine {
             TupleArgument[] a;
             try {
                 a = arg.toArray();
-                IJavaTuple list = new JavaTupleList(toJavaTuple(a[0]));
+                final IJavaTuple list =
+                        new JavaTupleList(JavaTuplesEngine.toJavaTuple(a[0]));
                 for (int i = 1; i < a.length; i++) {
-                    list.addArg(toJavaTuple(a[i]));
+                    list.addArg(JavaTuplesEngine.toJavaTuple(a[i]));
                 }
                 return list;
-            } catch (InvalidTupleOperationException e) {
+            } catch (final InvalidOperationException e) {
                 // cannot happen
-            } catch (NonCompositeException e) {
+            } catch (final NonCompositeException e) {
                 // cannot happen
             }
         }
         // compound case
         if (arg.isStruct()) {
             try {
-                int arity = arg.getArity();
-                IJavaTuple tuple =
-                        new JavaTuple(arg.getName(), toJavaTuple(arg.getArg(0)));
+                final int arity = arg.getArity();
+                final IJavaTuple tuple =
+                        new JavaTuple(arg.getName(),
+                                JavaTuplesEngine.toJavaTuple(arg.getArg(0)));
                 for (int i = 1; i < arity; i++) {
-                    tuple.addArg(toJavaTuple(arg.getArg(i)));
+                    tuple.addArg(JavaTuplesEngine.toJavaTuple(arg.getArg(i)));
                 }
                 return tuple;
-            } catch (InvalidOperationException e) {
+            } catch (final InvalidOperationException e) {
                 // cannot happen
-            } catch (InvalidTupleException e) {
+            } catch (final InvalidTupleException e) {
                 // cannot happen
-            } catch (NonCompositeException e) {
+            } catch (final NonCompositeException e) {
                 // cannot happen
             }
         }
