@@ -18,11 +18,11 @@ package alice.tucson.api.acc;
  * the specification tuple space. Bulk and uniform primitives are included.
  *
  * @author ste (mailto: s.mariani@unibo.it)
- * @see AsyncACC AsyncACC
+ * @see OrdinaryAndSpecificationAsyncACC OrdinaryAndSpecificationAsyncACC
  * @see BulkAsyncACC BulkAsyncACC
  * @see UniformAsyncACC UniformAsyncACC
  */
-public interface EnhancedAsyncACC extends AsyncACC, BulkAsyncACC, UniformAsyncACC {
+public interface EnhancedAsyncACC extends OrdinaryAndSpecificationAsyncACC, BulkAsyncACC, UniformAsyncACC {
     /*
      * Convenience interface
      */
